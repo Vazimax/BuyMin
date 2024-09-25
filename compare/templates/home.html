@@ -10,13 +10,97 @@
     <div class="container">
         <h1 class="mt-5">Welcome to Grocery Price Comparison</h1>
         <p>Compare prices across different supermarkets.</p>
+        
         <form method="GET" action="">
             <div class="mb-3">
                 <label for="search" class="form-label">Search for a product</label>
-                <input type="text" class="form-control" id="search" name="search" placeholder="Enter product name">
+                <input type="text" class="form-control" id="search" name="search" placeholder="Enter product name" value="{{ query }}">
             </div>
+
+            <!-- Supermarket Filter -->
+            <div class="mb-3">
+                <label for="supermarket" class="form-label">Filter by Supermarket</label>
+                <select class="form-select" name="supermarket" id="supermarket">
+                    <option value="">All Supermarkets</option>
+                    {% for supermarket in supermarkets %}
+                        <option value="{{ supermarket.id }}" {% if supermarket.id == selected_supermarket %}selected{% endif %}>
+                            {{ supermarket.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Price Range Filter -->
+            <div class="mb-3">
+                <label for="min_price" class="form-label">Min Price (€)</label>
+                <input type="number" step="0.01" class="form-control" id="min_price" name="min_price" value="{{ min_price }}">
+            </div>
+            <div class="mb-3">
+                <label for="max_price" class="form-label">Max Price (€)</label>
+                <input type="number" step="0.01" class="form-control" id="max_price" name="max_price" value="{{ max_price }}">
+            </div>
+
+            <!-- Sort by Price -->
+            <div class="mb-3">
+                <label for="sort_by" class="form-label">Sort by</label>
+                <select class="form-select" name="sort_by" id="sort_by">
+                    <option value="asc" {% if sort_by == 'asc' %}selected{% endif %}>Lowest Price</option>
+                    <option value="desc" {% if sort_by == 'desc' %}selected{% endif %}>Highest Price</option>
+                </select>
+            </div>
+
             <button type="submit" class="btn btn-primary">Search</button>
         </form>
+
+        {% if query %}
+            <h2 class="mt-5">Search results for "{{ query }}"</h2>
+            <div class="mt-3">
+                {% if page_obj %}
+                    {% for result in page_obj %}
+                        <h4>{{ result.product.name }}</h4>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Supermarket</th>
+                                    <th>Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for price in result.prices %}
+                                    <tr>
+                                        <td>{{ price.supermarket.name }}</td>
+                                        <td>€{{ price.price }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% endfor %}
+
+                    <!-- Pagination controls -->
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?search={{ query }}&page={{ page_obj.previous_page_number }}&supermarket={{ selected_supermarket }}&min_price={{ min_price }}&max_price={{ max_price }}&sort_by={{ sort_by }}">Previous</a>
+                                </li>
+                            {% endif %}
+
+                            <li class="page-item active">
+                                <a class="page-link">{{ page_obj.number }}</a>
+                            </li>
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?search={{ query }}&page={{ page_obj.next_page_number }}&supermarket={{ selected_supermarket }}&min_price={{ min_price }}&max_price={{ max_price }}&sort_by={{ sort_by }}">Next</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% else %}
+                    <p>No products found for your search.</p>
+                {% endif %}
+            </div>
+        {% endif %}
     </div>
 </body>
 </html>
